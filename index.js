@@ -26,11 +26,22 @@ const client = new MongoClient(uri, {
 
 async function run() {
     try {
+        // Connect the client to the server	(optional starting in v4.7)
+        await client.connect();
+        // Send a ping to confirm a successful connection
+        console.log("Pinged your deployment. You successfully connected to MongoDB!");
 
-        const toyDbCollections = client.db("ToyDB").collection("ToyPortals");
+        const AddedToyDB = client.db('ToyDB').collection('AddedToyDB');
+        // const toyDbCollections = client.db('ToyDB').collection('ToyPortals');
 
+        app.post('/AddedNewToy', async (req, res) => {
+            const AddedNewToy = req.body;
+            console.log(AddedNewToy);
+            const result = await AddedToyDB.insertOne(AddedNewToy);
+            res.send(result);
+        })
         app.get("/alltoy", async (req, res) => {
-            const cursorToy = toyDbCollections.find();
+            const cursorToy = AddedToyDB.find();
             const result = await cursorToy.toArray();
             res.send(result);
         });
@@ -54,7 +65,47 @@ async function run() {
                     Rating: 1
                 },
             };
-            const result = await toyDbCollections.findOne(query, options);
+            const result = await AddedToyDB.findOne(query, options);
+            res.send(result);
+        })
+
+        app.get("/toyData/:id", async (req, res) => {
+            const id = req.params.id
+            console.log(id);
+            const query = {
+                _id: new ObjectId(id)
+            }
+            const result = await AddedToyDB.findOne(query)
+            console.log(result);
+            res.send(result);
+        })
+
+
+        app.patch('/ToyUpdate/:id', async (req, res) => {
+            const id = req.params.id;
+            const updatedToyData = req.body;
+            const filter = {
+                _id: new ObjectId(id)
+            }
+            const updateToy = {
+                $set: {
+                    ...updatedToyData
+                }
+            }
+            // const options = {
+            //     upsert: true
+            // };
+
+            const result = await AddedToyDB.updateOne(filter, updateToy);
+             res.send(result);
+        })
+
+        app.delete('/mytoy/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = {
+                _id: new ObjectId(id)
+            }
+            const result = await AddedToyDB.deleteOne(query);
             res.send(result);
         })
 
@@ -63,10 +114,6 @@ async function run() {
 
 
 
-        // Connect the client to the server	(optional starting in v4.7)
-        await client.connect();
-        // Send a ping to confirm a successful connection
-        console.log("Pinged your deployment. You successfully connected to MongoDB!");
 
     } finally {
         // Ensures that the client will close when you finish/error
