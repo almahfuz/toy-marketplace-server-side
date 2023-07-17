@@ -6,7 +6,6 @@
   }],
   "routes": [{
     "src": "/(.*)",
-    "dest": "index.js",
-    "methods":["POST", "GET", "PATCH", "PUT", "DELETE"] 
+    "dest": "index.js"
   }]
 }
