@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+// const jwt = require('jsonwebtoken');
 require('dotenv').config();
 const app = express();
 app.use(cors());
@@ -23,6 +24,26 @@ const client = new MongoClient(uri, {
         deprecationErrors: true,
     }
 });
+// const verifyJWT = (req, res, next) => {
+//     const authorization = req.headers.authorization;
+//     if (!authorization) {
+//         return res.status(401).send({
+//             error: true,
+//             message: 'unauthorized access'
+//         });
+//     }
+//     const token = authorization.split(' ')[1];
+//     jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+//         if (err) {
+//             return res.status(401).send({
+//                 error: true,
+//                 message: 'unauthorized access'
+//             })
+//         }
+//         req.decoded = decoded;
+//         next();
+//     })
+// }
 
 async function run() {
     try {
@@ -33,6 +54,19 @@ async function run() {
 
         const AddedToyDB = client.db('ToyDB').collection('AddedToyDB');
         // const toyDbCollections = client.db('ToyDB').collection('ToyPortals');
+        // jwt
+        // app.post('/jwt', (req, res) => {
+        //     const user = req.body;
+        //     console.log(user);
+        //     const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+        //         expiresIn: '1h'
+        //     });
+        //     console.log(token);
+        //     res.send({
+        //         token
+        //     });
+        // })
+
 
         app.post('/AddedNewToy', async (req, res) => {
             const AddedNewToy = req.body;
@@ -45,7 +79,11 @@ async function run() {
             const result = await cursorToy.toArray();
             res.send(result);
         });
-
+        app.get("/allToyDetails", async (req, res) => {
+            const cursorToy = AddedToyDB.find();
+            const result = await cursorToy.limit(20).toArray();
+            res.send(result);
+        });
 
         app.get('/singleToyDetails/:id', async (req, res) => {
             const id = req.params.id;
@@ -97,7 +135,7 @@ async function run() {
             // };
 
             const result = await AddedToyDB.updateOne(filter, updateToy);
-             res.send(result);
+            res.send(result);
         })
 
         app.delete('/mytoy/:id', async (req, res) => {
@@ -113,14 +151,17 @@ async function run() {
         app.get("/getSearchText/:text", async (req, res) => {
             const text = req.params.text;
             const result = await AddedToyDB
-              .find({
-                $or: [
-                  { ToyName: { $regex: text, $options: "i" } },
-                ],
-              })
-              .toArray();
+                .find({
+                    $or: [{
+                        ToyName: {
+                            $regex: text,
+                            $options: "i"
+                        }
+                    }, ],
+                })
+                .toArray();
             res.send(result);
-          });
+        });
 
 
 
