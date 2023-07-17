@@ -110,7 +110,17 @@ async function run() {
         })
 
 
-
+        app.get("/getSearchText/:text", async (req, res) => {
+            const text = req.params.text;
+            const result = await AddedToyDB
+              .find({
+                $or: [
+                  { ToyName: { $regex: text, $options: "i" } },
+                ],
+              })
+              .toArray();
+            res.send(result);
+          });
 
 
 
